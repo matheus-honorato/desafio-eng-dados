@@ -6,6 +6,10 @@ import json
 import glob
 
 from prefect import task
+from utils import log
+from entities.dados_api import Dados_api
+from repository.dados_apiRepository import Dados_apiRepository
+from configs.connection import DBConnectionHandler
 
 @task
 def request():
@@ -14,29 +18,21 @@ def request():
     url = base_url
     response = requests.get(url)
     response.raise_for_status()
-    print(response.json())
-    return response.json()
-
-
-@task
-def request():
-
-    base_url = "https://dados.mobilidade.rio/gps/brt"
-    url = base_url
-    response = requests.get(url)
-    response.raise_for_status()
-    print(response.json())
+    log("Realizando requisição dos dados...")
+    # print("Realizando requisição dos dados...")
     return response.json()
 
 @task
 def gerar_nome_arquivo() -> str:
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") 
     nome_arquivo = f"gps_brt_{timestamp}.json"
-    print(nome_arquivo)
+    log("Gerando nome do arquivo com o timestamp recente...")
+    # print("Gerando nome do arquivo com o timestamp recente...")
+
     return nome_arquivo
 
 @task
-def salva_arquivo_json(nome_arquivo, dados):
+def salva_arquivo_json(nome_arquivo, dados_request):
     """
     Salva os dados extraídos da API em um arquivo JSON no diretório especificado.
 
@@ -45,23 +41,36 @@ def salva_arquivo_json(nome_arquivo, dados):
 
     """
 
-    caminho_arquivo = os.path.join("raw", nome_arquivo)
+    # caminho_arquivo = os.path.join("/usr/app/raw", nome_arquivo) ##Docker
+    caminho_arquivo = os.path.join("raw", nome_arquivo) # Local
 
     try:
         with open(caminho_arquivo, "w", encoding="utf-8") as file:
-            json.dump(dados, file, ensure_ascii=False, indent=4)
-            print(f"Dados salvos no arquivo '{caminho_arquivo}' com sucesso!")
+            json.dump(dados_request, file, ensure_ascii=False, indent=4)
+            # print(f"Dados da API foram salvos no arquivo '{caminho_arquivo}' com sucesso!")
+            log(f"Dados da API foram salvos no arquivo '{caminho_arquivo}' com sucesso!")
+            return caminho_arquivo
+            
+            
     except Exception as e:
         print(f"Erro ao salvar o arquivo JSON: {e}")
+        log("Erro ao salvar o arquivo JSON: {e}")
 
 @task
-def json_recente(diretorio):
-    arquivos_json = os.path.join(diretorio, "*.json")
-    print(arquivos_json)
-    lista_arquivos_json = glob.glob(arquivos_json)
-    print(lista_arquivos_json)
-    lista_arquivos_json.sort(key=os.path.getmtime, reverse=True)
-    arquivos_json_recente = lista_arquivos_json[:1]
-    arquivo_recente = arquivos_json_recente[0]
-    return arquivo_recente
+def carregar_dados_json(arquivo_recente):
+    with open(arquivo_recente, "r", encoding="utf-8") as file:
+            json_data = json.load(file)
+            if "veiculos" in json_data:
+                # print("Dados da API carregado para leitura com sucesso...")
+                log("Dados da API carregado para leitura com sucesso...")
+                return json_data["veiculos"] 
+                
+            else:
+                log("Não encontrado results no json")
 
+@task
+def inserir_dados_db(dados):
+    dados_insert = Dados_apiRepository()
+    dados_insert.insert(dados)
+    # print("Dados da API inserido no banco de dados com sucesso...")
+    log("Dados da API inserido no banco de dados com sucesso...")
