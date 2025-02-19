@@ -10,6 +10,3 @@ class Dados_api(Base):
     id = Column(Integer, primary_key=True)
     data_extracao = Column(TIMESTAMP, server_default=func.now())  # Timestamp padrão
     dados = Column(JSONB, nullable=False)  # JSON armazenado no formato otimizado do PostgreSQL
-
-    def __repr__(self):
-        return f"Dados [Origem={self.origem}, dados={self.dados}]"
