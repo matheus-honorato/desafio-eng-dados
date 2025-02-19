@@ -14,7 +14,7 @@ db_name = os.getenv("DB_NAME")
 
 class DBConnectionHandler:
     def __init__(self):
-        self.__connection_string = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:5432/{db_name}"
+        self.__connection_string = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
         self.__engine = self.__create_database_engine()
         self.session = None
 
