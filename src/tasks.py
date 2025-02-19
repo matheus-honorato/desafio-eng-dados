@@ -3,6 +3,7 @@ import requests
 import datetime
 import os
 import json
+import glob
 
 from prefect import task
 
@@ -52,3 +53,15 @@ def salva_arquivo_json(nome_arquivo, dados):
             print(f"Dados salvos no arquivo '{caminho_arquivo}' com sucesso!")
     except Exception as e:
         print(f"Erro ao salvar o arquivo JSON: {e}")
+
+@task
+def json_recente(diretorio):
+    arquivos_json = os.path.join(diretorio, "*.json")
+    print(arquivos_json)
+    lista_arquivos_json = glob.glob(arquivos_json)
+    print(lista_arquivos_json)
+    lista_arquivos_json.sort(key=os.path.getmtime, reverse=True)
+    arquivos_json_recente = lista_arquivos_json[:1]
+    arquivo_recente = arquivos_json_recente[0]
+    return arquivo_recente
+
