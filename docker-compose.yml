@@ -1,0 +1,44 @@
+version: "3.7"
+
+services:
+    postgres-sql:
+      image: postgres  
+      container_name: postgres_api
+      environment:
+        POSTGRES_PASSWORD: "Postgres2019!"  
+        POSTGRES_DB: "dados_api"
+      restart: always 
+      ports:
+        - 5434:5432 
+      volumes:
+        - postgres_data2:/var/lib/postgresql/data 
+
+      networks:
+        - prefect-server
+
+
+    prefect-client:
+        build: .
+        command: python3 /usr/app/main.py
+        volumes:
+            - ./src:/usr/app/
+            - type: bind
+              source: ./src/main.py
+              target: /usr/app/main.py
+              read_only: true
+            - type: bind
+              source: ./config.toml
+              target: /root/.prefect/config.toml
+              read_only: true
+
+        networks:
+          - prefect-server
+        depends_on:
+          - postgres-sql  
+
+networks:
+  prefect-server:
+    name: prefect-server
+
+volumes:
+  postgres_data2: 
