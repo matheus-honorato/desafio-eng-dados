@@ -166,7 +166,7 @@ def criar_table():
         raise
 
 @task
-def inserir_dados_db(dados: List[Dict[str, Any]]):
+def inserir_dados_db(dados: list[dict[str, Any]]):
     """
     Insere os dados da API no banco de dados
 
