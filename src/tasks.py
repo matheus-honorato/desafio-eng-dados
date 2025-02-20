@@ -1,15 +1,13 @@
-import pandas as pd
 import requests
 import datetime
 import os
 import json
-import glob
-
 from prefect import task
 from utils import log
 from entities.dados_api import Dados_api
 from repository.dados_apiRepository import Dados_apiRepository
-from configs.connection import DBConnectionHandler
+from sqlalchemy import Column, Integer, Table, TIMESTAMP, func, MetaData
+from sqlalchemy.dialects.postgresql import JSONB
 
 @task
 def request():
@@ -41,8 +39,8 @@ def salva_arquivo_json(nome_arquivo, dados_request):
 
     """
 
-    # caminho_arquivo = os.path.join("/usr/app/raw", nome_arquivo) ##Docker
-    caminho_arquivo = os.path.join("raw", nome_arquivo) # Local
+    caminho_arquivo = os.path.join("/usr/app/raw", nome_arquivo) ##Docker
+    # caminho_arquivo = os.path.join("raw", nome_arquivo) # Local
 
     try:
         with open(caminho_arquivo, "w", encoding="utf-8") as file:
@@ -69,8 +67,19 @@ def carregar_dados_json(arquivo_recente):
                 log("Não encontrado results no json")
 
 @task
+def criar_schema():
+    try:
+        apiRepository = Dados_apiRepository()
+        apiRepository.executa_query("CREATE SCHEMA IF NOT EXISTS raw_brt;")
+        print("Schema criado com sucesso.")
+    except Exception as e:
+        print(f"Erro ao criar schema: {e}")
+
+
+
+@task
 def inserir_dados_db(dados):
-    dados_insert = Dados_apiRepository()
-    dados_insert.insert(dados)
+    apiRepository = Dados_apiRepository()
+    apiRepository.insert(dados)
     # print("Dados da API inserido no banco de dados com sucesso...")
     log("Dados da API inserido no banco de dados com sucesso...")
