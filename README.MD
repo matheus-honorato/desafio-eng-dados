@@ -96,3 +96,8 @@ Agora que já configuramos nosso projeto, podemos retornar ao nosso passo de exe
 	- Execute o seguinte comando no seu terminal: `docker compose -f docker-compose.yml up -d`
 7. Calma, estamos quase lá. Agora estamos pronto pra executar nosso fluxo. No diretório principal do projeto. 
 	-	Execute o comando seu terminal: `docker compose -f docker-compose.yml up`
+
+### DBT
+Agora que nosso fluxo executou, precisamos realizar as transformações, certo? Você já definiu o profiles.yml, então agora é bem fácil.
+
+-	Navegue até a pasta dbt_brt e execute o seguinte comando: `dbt run`
