@@ -8,17 +8,29 @@ from entities.dados_api import Dados_api
 from repository.dados_apiRepository import Dados_apiRepository
 from sqlalchemy import Column, Integer, Table, TIMESTAMP, func, MetaData
 from sqlalchemy.dialects.postgresql import JSONB
+from typing import  Any
 
 @task
 def request():
 
     base_url = "https://dados.mobilidade.rio/gps/brt"
     url = base_url
-    response = requests.get(url)
-    response.raise_for_status()
-    log("Realizando requisição dos dados...")
-    # print("Realizando requisição dos dados...")
-    return response.json()
+    try:
+        log("Realizando requisição dos dados...")
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        return data
+
+    except requests.exceptions.HTTPError as http_err:
+        log(f"Erro HTTP ao realizar a requisição: {http_err}")
+        raise
+    except requests.exceptions.RequestException as req_err:
+        log(f"Erro durante a requisição: {req_err}")
+        raise
+    except ValueError as val_err:
+        log(f"Erro ao processar a resposta da API: {val_err}")
+        raise
 
 @task
 def gerar_nome_arquivo() -> str:
@@ -55,31 +67,34 @@ def salva_arquivo_json(nome_arquivo, dados_request):
         log("Erro ao salvar o arquivo JSON: {e}")
 
 @task
-def carregar_dados_json(arquivo_recente):
-    with open(arquivo_recente, "r", encoding="utf-8") as file:
-            json_data = json.load(file)
-            if "veiculos" in json_data:
-                # print("Dados da API carregado para leitura com sucesso...")
-                log("Dados da API carregado para leitura com sucesso...")
-                return json_data["veiculos"] 
-                
-            else:
-                log("Não encontrado results no json")
+def carregar_dados_json(nome_arquivo):
+    with open(nome_arquivo, "r", encoding="utf-8") as file:
+        json_data = json.load(file)
+        if "veiculos" in json_data:
+            log("Dados da API carregado para leitura com sucesso...")
+            return json_data["veiculos"]
+        else:
+            log("Não encontrado results no json")
 
 @task
 def criar_schema():
     try:
         apiRepository = Dados_apiRepository()
         apiRepository.executa_query("CREATE SCHEMA IF NOT EXISTS raw_brt;")
-        print("Schema criado com sucesso.")
+        log("Schema criado com sucesso.")
     except Exception as e:
-        print(f"Erro ao criar schema: {e}")
-
-
+        log(f"Erro ao criar schema: {e}")
+@task
+def criar_table():
+    try:
+        apiRepository = Dados_apiRepository()
+        apiRepository.create_table()
+        log("Tabela criada com sucesso.")
+    except Exception as e:
+        log(f"Erro ao criar tabela: {e}")
 
 @task
 def inserir_dados_db(dados):
     apiRepository = Dados_apiRepository()
     apiRepository.insert(dados)
-    # print("Dados da API inserido no banco de dados com sucesso...")
     log("Dados da API inserido no banco de dados com sucesso...")
