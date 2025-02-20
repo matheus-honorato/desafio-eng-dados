@@ -4,16 +4,18 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 
 class Dados_api(Base):
-     """
-    Classe que representa a tabela 'dados_api' no banco de dados do POSTGRESQL.
 
-    A tabela é responsável por armazena os dados extraídos da API.
-
-    Attributes:
-        id (int): Chave primária da tabela.
-        data_extracao (datetime): Timestamp da extração dos dados (gerado automaticamente).
-        dados (JSONB): Dados da API armazenados em formato JSON.
     """
+        Classe que representa a tabela 'dados_api' no banco de dados do POSTGRESQL.
+
+        A tabela é responsável por armazena os dados extraídos da API.
+
+        Attributes:
+            id (int): Chave primária da tabela.
+            data_extracao (datetime): Timestamp da extração dos dados (gerado automaticamente).
+            dados (JSONB): Dados da API armazenados em formato JSON.
+    """
+
     __tablename__ = "dados_api"
     __table_args__ = {"schema": "raw_brt"}  
 
