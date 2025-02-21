@@ -9,6 +9,8 @@ from repository.dados_apiRepository import Dados_apiRepository
 from sqlalchemy import Column, Integer, Table, TIMESTAMP, func, MetaData
 from sqlalchemy.dialects.postgresql import JSONB
 from typing import  Any
+import pandas as pd
+import numpy as np
 
 @task
 def request() -> list[dict[str, Any]]:
@@ -48,82 +50,64 @@ def gerar_nome_arquivo() -> str:
     """
     Gera um nome de arquivo único para os dados da BRT, utilizando um timestamp no formato `YYYY-MM-DD_HH-MM-SS`.
 
-    O nome do arquivo segue o padrão: `gps_brt_<timestamp>.json`.
+    O nome do arquivo segue o padrão: `gps_brt_<timestamp>.csv`.
 
     Returns:
-        str: O nome do arquivo gerado, no formato `gps_brt_YYYY-MM-DD_HH-MM-SS.json`.
+        str: O nome do arquivo gerado, no formato `gps_brt_YYYY-MM-DD_HH-MM-SS.csv`.
 
     Exemplo:
-        'gps_brt_2024-10-25_14-30-45.json'
+        'gps_brt_2024-10-25_14-30-45.csv'
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") 
-    nome_arquivo = f"gps_brt_{timestamp}.json"
+    nome_arquivo = f"gps_brt_{timestamp}.csv"
     log("Gerando nome do arquivo com o timestamp recente...")
     return nome_arquivo
 
 @task
-def salva_arquivo_json(nome_arquivo: str, dados_request: dict) -> str :
-    """
-    Salva os dados extraídos da API em um arquivo JSON no diretório especificado.
-
-    O nome do arquivo é gerado dinamicamente com a função gerar nome.
-
-    Args:
-        nome_arquivo (str): Nome do arquivo JSON a ser criado.
-        dados_request List[Dict[str, Any]]: Dados da API a serem salvos no arquivo JSON.
-    Returns:
-        str: Caminho completo do arquivo JSON salvo.
-    
-    Exemplo:
-        salva_arquivo_json("gps_brt_2023-10-25_14-30-45.json", dados)
-        '/usr/app/raw/gps_brt_2023-10-25_14-30-45.json'
-
-    Raises:
-    FileNotFoundError: Se o diretório especificado não existir.
-    Exception: Se ocorrer um erro inesperado durante a gravação do arquivo.
-    """
-
+def salva_arquivo_csv(nome_arquivo: str, dados_request: dict) -> str :
+ 
     caminho_arquivo = os.path.join("/usr/app/raw", nome_arquivo)
 
     if not os.path.exists("/usr/app/raw"):
         raise FileNotFoundError("O diretório '/usr/app/raw' não existe.")
 
     try:
-        with open(caminho_arquivo, "w", encoding="utf-8") as file:
-            json.dump(dados_request, file, ensure_ascii=False, indent=4)
-            log(f"Dados da API foram salvos no arquivo '{caminho_arquivo}' com sucesso!")
-            return caminho_arquivo
-
+        if "veiculos" not in dados_request:
+            raise KeyError("A chave 'veiculos' não está presente no JSON.")
+        veiculos = dados_request['veiculos']
+        df = pd.DataFrame(veiculos)
+        df.to_csv(caminho_arquivo, index=False, encoding="utf-8")
+        log(f"Dados da API foram salvos no arquivo '{caminho_arquivo}' com sucesso!")
+        return caminho_arquivo
     except Exception as e:
         log(f"Erro ao salvar o arquivo JSON: {e}")
 
 @task
 def carregar_dados_json(nome_arquivo: str):
     """
-    Faz a leitura dos dados de um arquivo JSON e retorna a lista de veículos contida nele.
+    Faz a leitura dos dados de um arquivo CSV e retorna uma lista de dicionários no formato JSON.
     Args:
-        nome_arquivo (str): Caminho do arquivo JSON a ser carregado.
+        nome_arquivo (str): Caminho do arquivo CSV a ser carregado.
     Returns:
         List[Dict[str, Any]]: Lista de dicionários contendo os dados dos veículos.
     
     Raises:
         FileNotFoundError: Se o arquivo especificado não existir.
-        KeyError: Se a chave "veiculos" não estiver presente no JSON.
+        KeyError: Erro inesperado acontecer.
         Exception: Se ocorrer um erro inesperado durante a leitura do arquivo.
     Exemplo:
-        dados = carregar_dados_json("gps_brt_2023-10-25_14-30-45.json")
+        dados = carregar_dados_csv("gps_brt_2023-10-25_14-30-45.csv")
         [{"codigo": "901008", "linha": "22"}, {"codigo": "901011", "linha": "50"}]
     
 
     """
+
     try:
-        with open(nome_arquivo, "r", encoding="utf-8") as file:
-            json_data = json.load(file)
-            if "veiculos" in json_data:
-                log("Dados da API carregado para leitura com sucesso...")
-                return json_data["veiculos"]
-            else:
-                log("Não encontrado results no json")
+        df = pd.read_csv(nome_arquivo, encoding="utf-8")
+        df = df.replace([np.nan, 'NaN'], None)
+        dados_json = df.to_dict(orient="records")
+        log("Dados do CSV carregados e convertidos para JSON com sucesso...")
+        return dados_json
     except FileNotFoundError:
         log(f"Erro: O arquivo '{nome_arquivo}' não foi encontrado.")
         raise

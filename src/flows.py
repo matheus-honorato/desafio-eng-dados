@@ -1,7 +1,7 @@
 from prefect import task, Flow
 import prefect
 from prefect.schedules import IntervalSchedule
-from tasks import request, gerar_nome_arquivo, salva_arquivo_json, inserir_dados_db, carregar_dados_json, criar_schema, criar_table
+from tasks import request, gerar_nome_arquivo, salva_arquivo_csv, inserir_dados_db, carregar_dados_json, criar_schema, criar_table
 from datetime import timedelta, datetime
 
 
@@ -16,7 +16,7 @@ with Flow("BRT-ELT", schedule) as flow:
     criando_tabela = criar_table()
     dados_requisicao = request()
     nome_arquivo = gerar_nome_arquivo()
-    caminho_arquivo = salva_arquivo_json(nome_arquivo, dados_requisicao)
+    caminho_arquivo = salva_arquivo_csv(nome_arquivo, dados_requisicao)
     carga_dados = carregar_dados_json(caminho_arquivo)
     inserir_no_banco = inserir_dados_db(carga_dados)
 
