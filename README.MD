@@ -57,6 +57,9 @@ Siga os passos abaixo para executar este projeto:
 
 ##### Configurando credenciais
 Caso não seja necessário, você pode rodar com as configurações padrão. Se você precisar modificar as configurações:
+
+Nota: Verifique o ip do seu daemon docker, se por caso o seu ip for diferente de 172.17.0.1, então em cada arquivo config.toml modifique para o seu ip daemon (verifique seu ip daemon no terminal através do comando `ip a | grep docker0`)
+
 - Há alguns locais onde você deve modificar para as suas credenciais:
 	-	No diretório principal do projeto, modifique a POSTGRES_PASSWORD do arquivo docker-compose.yml, responsável por definir a senha do banco de dados postgresql.
 	-	No diretório prefect-server modifique a .env para os dados do seu banco de dados postgresql.
