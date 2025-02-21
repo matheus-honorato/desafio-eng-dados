@@ -101,3 +101,4 @@ Agora que já configuramos nosso projeto, podemos retornar ao nosso passo de exe
 Agora que nosso fluxo executou, precisamos realizar as transformações, certo? Você já definiu o profiles.yml, então agora é bem fácil.
 
 -	Navegue até a pasta dbt_brt e execute o seguinte comando: `dbt run`
+- 	Agora o dbt criou um schema chamado stag_brt e uma tabela chamada stag_dados no banco de dados com os dados transformados :)
