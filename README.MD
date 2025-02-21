@@ -100,6 +100,8 @@ Agora que já configuramos nosso projeto, podemos retornar ao nosso passo de exe
 7. Calma, estamos quase lá. Agora estamos pronto pra executar nosso fluxo. No diretório principal do projeto. 
 	-	Execute o comando seu terminal: `docker compose -f docker-compose.yml up`
 
+- Acessa a UI em [localhost:8080](https://localhost:8080)
+
 ### DBT
 Agora que nosso fluxo executou, precisamos realizar as transformações, certo? Você já definiu o profiles.yml, então agora é bem fácil.
 
