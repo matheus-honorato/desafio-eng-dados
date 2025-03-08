@@ -33,4 +33,4 @@ models:
   dbt_brt:
     # Config indicated by + and applies to all files under models/brt/
     brt:
-      +materialized: incremental
+      +materialized: table
